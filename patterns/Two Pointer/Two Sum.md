@@ -1,97 +1,160 @@
-# Two Sum with TypeScript
+# Two Sum II - Input Array Is Sorted
 
-This problem is not a typical two-pointer problem. Instead, it can be solved efficiently using a hash map (or dictionary) to store the indices of the numbers we have seen so far. This allows us to find the complement of the current number in constant time.
+URL – https://leetcode.com/problems/two-sum-ii-input-array-is-sorted/
 
-<b>CATCH: Array is not sorted and need to return the indices of the two numbers.</b>
+Problem
+-------
+Given a sorted array of integers `numbers` (ascending) and a target value `target`, return the 1-based indices of the two numbers that add up to `target`.
 
-## Problem
+Note: This problem expects 1-based indices in the result (not 0-based).
 
-Given an array of integers `nums` and an integer `target`, return the indices of the two numbers such that they add up to the target.
+Approach (Two pointers)
+------------------------
+Because the array is sorted, we can use two pointers: one at the start (left) and one at the end (right). Compute the sum of the values at the pointers:
 
-You may assume that each input has exactly one solution, and you may not use the same element twice.
+- If sum == target: we found the pair (return 1-based indices).
+- If sum > target: decrease the right pointer to reduce the sum.
+- If sum < target: increase the left pointer to increase the sum.
 
+This runs in O(n) time and O(1) extra space.
 
-### Example
+Quick intuition / proof
+-----------------------
+When sum > target, any candidate using the current left and a smaller right index would only make the right value smaller and thus the sum smaller — so moving right leftwards is safe. Symmetric reasoning applies when sum < target.
 
+Examples
+--------
+1) Input: numbers = [2,7,11,15], target = 9
+   Output: [1,2]
+
+2) Input: numbers = [2,3,4], target = 6
+   Output: [1,3]
+
+3) Input: numbers = [-1,0], target = -1
+   Output: [1,2]
+
+4) Input: numbers = [1,2,3,4,4,9], target = 8
+   Output: [4,5]  (example with duplicates)
+
+Edge cases
+----------
+- Empty or null input -> return []
+- Length < 2 -> return []
+- Duplicate values (works fine)
+- Negative and positive values (works fine)
+- LeetCode guarantees a solution for this problem; if used as a general library you may prefer throwing an exception when no pair is found.
+
+ASCII diagram (pointers move inward)
+------------------------------------
+Example array: [1, 2, 3, 4, 6], target = 7
+
+ left -> 1   2   3   4   6 <- right
+ indices 0   1   2   3   4
+
+ Step 1: left=0 (1), right=4 (6) => sum=7 -> found -> return [1,5]
+
+If not found immediately, imagine arrows moving inward:
+ [1, 2, 3, 4, 6]
+  ^           ^
+  |           |
+ left       right
+  -> move right leftwards if sum>target
+  -> move left rightwards if sum<target
+
+TypeScript (improved)
+---------------------
 ```typescript
-Input: nums = [2, 7, 11, 15], target = 9
-Output: [0, 1]
+/**
+ * Finds two 1-based indices of numbers that add up to target in a sorted array.
+ * @param numbers Sorted array of integers (ascending).
+ * @param target Target sum.
+ * @returns [index1, index2] (1-based). Returns [] if no pair found.
+ */
+function twoSum(numbers: number[], target: number): number[] {
+  if (!numbers || numbers.length < 2) return [];
 
-Input: nums = [3,2,4], target = 6
-Output: [1,2]
+  let left = 0;
+  let right = numbers.length - 1;
 
-```
+  while (left < right) {
+    const sum = numbers[left] + numbers[right];
 
-## Solution
-
-This solution uses a hash map to store previously visited numbers and their indices. For each number, we calculate the difference (`target - currentNumber`) and check whether that value has already been seen.
-
-If the difference exists in the hash map, we have found the pair and can return their indices immediately.
-
-### Code
-
-```typescript
-function twoSum(nums: number[], target: number): number[] {
-    const mapping: Record<number, number> = {};
-
-    for (let i = 0; i < nums.length; i++) {
-        const diff = target - nums[i];
-
-        if (mapping[diff] !== undefined) {
-            return [mapping[diff], i];
-        }
-
-        mapping[nums[i]] = i;
+    if (sum === target) {
+      return [left + 1, right + 1]; // 1-based indices
     }
 
-    return [];
+    if (sum > target) {
+      right--;
+    } else {
+      left++;
+    }
+  }
+
+  return [];
 }
 ```
 
+Java (improved)
+----------------
 ```java
-import java.util.HashMap; 
-import java.util.Map; 
+/**
+ * Returns 1-based indices of two numbers adding up to target in a sorted array.
+ * If no such pair exists, returns an empty array.
+ */
+class Solution {
+    public int[] twoSum(int[] numbers, int target) {
+        if (numbers == null || numbers.length < 2) return new int[]{};
 
-class Solution { 
-    public int[] twoSum(int[] nums, int target) { 
-        Map<Integer, Integer> mapping = new HashMap<>(); 
+        int left = 0;
+        int right = numbers.length - 1;
 
-        for (int i = 0; i < nums.length; i++) {
-          int diff = target - nums[i]; 
-          
-          if (mapping.containsKey(diff)) { 
-            return new int[]{mapping.get(diff), i}; 
-          }
-
-          mapping.put(nums[i], i); 
+        while (left < right) {
+            int sum = numbers[left] + numbers[right];
+            if (sum == target) {
+                return new int[]{left + 1, right + 1};
+            } else if (sum > target) {
+                right--;
+            } else {
+                left++;
+            }
         }
-
-        return new int[]{}; 
-    } 
+        return new int[]{}; // or throw new IllegalArgumentException("No solution")
+    }
 }
 ```
 
----
+Minimal TypeScript test harness
+-------------------------------
+```typescript
+// Quick manual tests
+console.log(twoSum([2,7,11,15], 9)); // [1,2]
+console.log(twoSum([2,3,4], 6));     // [1,3]
+console.log(twoSum([-1,0], -1));     // [1,2]
+console.log(twoSum([1,2,3,4,4,9], 8)); // [4,5]
+```
 
-## Complexity Analysis
+Complexity Analysis
+-------------------
+- Time: O(n) — each pointer moves at most n times.
+- Space: O(1) — constant extra space.
 
-### Time Complexity
+Alternative approaches
+----------------------
+- Hash map: O(n) time but O(n) extra space. Useful if the array is not sorted.
 
-**O(n)**
+Presentation / documentation suggestions
+--------------------------------------
+- Mention explicitly that indices are 1-based at the top of the file (done).
+- Add a small ASCII or image diagram (done). If you'd like an image file instead, I can add one to the repo.
+- Optionally add unit tests (Jest) or a small Node script for automated testing.
 
-* We iterate through the array once.
-* Hash map lookups and insertions take **O(1)** on average.
+Takeaways
+---------
+- Two pointers is the canonical solution when the input is sorted and you need to find pair sums.
+- Prefer this method for O(1) extra space and linear time.
 
-### Space Complexity
+If you want, I can also:
+- add a small image diagram file instead of ASCII,
+- create a `two-sum.ts` and a `test` script (Jest or simple Node), or
+- convert the TypeScript solution into a small runnable example in the repo.
 
-**O(n)**
-
-* In the worst case, we store every element in the hash map.
-
----
-
-## Key Idea
-
-Instead of using two nested loops (`O(n²)`), we use a hash map to remember numbers we've already seen. This allows us to find the matching complement in constant time and achieve an overall **O(n)** solution.
-
-This format works well for a GitHub README, LeetCode solution explanation, or coding interview notes.
